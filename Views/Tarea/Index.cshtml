@@ -1,0 +1,142 @@
+﻿
+@model List<Tarea>
+@{
+    var nuevaTareaModel = new NuevaTarea();
+}
+
+<div class="d-flex justify-content-between align-items-center">
+    <h2>Listado de Tareas</h2>
+
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevaTareaModal">
+        Nueva Tarea
+    </button>
+</div>
+
+
+<div class="modal fade" id="nuevaTareaModal" tabindex="-1" aria-labelledby="nuevaTareaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="nuevaTareaModalLabel">Nueva Tarea</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="nuevaTareaForm" method="post">
+                    <div class="mb-3">
+                        <label for="Titulo" class="form-label">Título</label>
+                        <input type="text" class="form-control" id="Titulo" name="Titulo" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="Descripcion" name="Descripcion" rows="3" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Agregar Tarea</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>Título</th>
+            <th>Descripción</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var tarea in Model)
+        {
+            <tr>
+                <td>@tarea.Titulo</td>
+                <td>@tarea.Descripcion</td>
+                <td>
+                    @if (tarea.Completada)
+                    {
+                        <span class="badge bg-success">Completada</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Pendiente</span>
+                    }
+                </td>
+                <td>
+                    <div class="btn-group" role="group">
+                        @if(!tarea.Completada)
+                        {
+                            <button class="btn btn-success completar-tarea" data-tarea-id="@tarea.IdTarea">Completar</button>
+                        }
+                   
+                    <button class="btn btn-danger eliminar-tarea" data-tarea-id="@tarea.IdTarea">Eliminar</button>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+       $(document).ready(function () {
+            $('#nuevaTareaForm').submit(function (e) {
+                e.preventDefault();
+
+                $.ajax({
+                    url: '@Url.Action("NuevaTarea", "Tarea")',
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function () {
+                        $('#nuevaTareaModal').modal('hide');
+                        location.reload();
+                    },
+                    error: function (error) {
+                        console.error('Error al agregar nueva tarea:', error);
+                    }
+                });
+            });
+
+            $('.completar-tarea').click(function () {
+                var tareaId = $(this).data('tarea-id');
+                console.log(tareaId)
+                $.ajax({
+                    url: '/Tarea/CompletarTarea/' + tareaId,
+                    type: 'POST',
+                    success: function (result) {
+                        if (result.success) {
+                            location.reload();
+                        } else {
+                            console.error('Error al completar tarea:', result.error);
+                        }
+                    },
+                    error: function (error) {
+                        console.error('Error al completar tarea:', error);
+                    }
+                });
+            });
+
+            $('.eliminar-tarea').click(function () {
+                var tareaId = $(this).data('tarea-id');
+
+                $.ajax({
+                    url: '/Tarea/EliminarTarea/' + tareaId,
+                    type: 'POST',
+                    success: function (result) {
+                        if (result.success) {
+                            location.reload();
+                        } else {
+                            console.error('Error al eliminar tarea:', result.error);
+                        }
+                    },
+                    error: function (error) {
+                        console.error('Error al eliminar tarea:', error);
+                    }
+                });
+            });
+        });
+    </script>
+}
